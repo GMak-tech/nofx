@@ -1,6 +1,7 @@
 package trader
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,6 +12,8 @@ import (
 	"nofx/pool"
 	"strings"
 	"time"
+
+	"github.com/sonirico/go-hyperliquid"
 )
 
 // AutoTraderConfig 自动交易配置（简化版 - AI全权决策）
@@ -73,6 +76,7 @@ type AutoTrader struct {
 	exchange              string // 交易平台名称
 	config                AutoTraderConfig
 	trader                Trader // 使用Trader接口（支持多平台）
+	dataProvider          market.DataProvider // 市场数据提供者（支持多平台）
 	mcpClient             *mcp.Client
 	decisionLogger        *logger.DecisionLogger // 决策日志记录器
 	initialBalance        float64
@@ -162,6 +166,22 @@ func NewAutoTrader(config AutoTraderConfig) (*AutoTrader, error) {
 	logDir := fmt.Sprintf("decision_logs/%s", config.ID)
 	decisionLogger := logger.NewDecisionLogger(logDir)
 
+	var hlExchange *hyperliquid.Exchange
+	var hlAPIURL string
+	if ht, ok := trader.(*HyperliquidTrader); ok {
+		hlExchange = ht.exchange
+		if config.HyperliquidTestnet {
+			hlAPIURL = "https://api.hyperliquid-testnet.xyz"
+		} else {
+			hlAPIURL = "https://api.hyperliquid.xyz"
+		}
+	}
+	dataProvider, err := market.GetProviderForTrader(config.Exchange, hlExchange, hlAPIURL, "")
+	if err != nil {
+		return nil, fmt.Errorf("初始化数据提供者失败: %w", err)
+	}
+	log.Printf("📊 [%s] 使用数据提供者: %s", config.Name, dataProvider.Name())
+
 	return &AutoTrader{
 		id:                    config.ID,
 		name:                  config.Name,
@@ -169,6 +189,7 @@ func NewAutoTrader(config AutoTraderConfig) (*AutoTrader, error) {
 		exchange:              config.Exchange,
 		config:                config,
 		trader:                trader,
+		dataProvider:          dataProvider,
 		mcpClient:             mcpClient,
 		decisionLogger:        decisionLogger,
 		initialBalance:        config.InitialBalance,
@@ -218,9 +239,9 @@ func (at *AutoTrader) Stop() {
 func (at *AutoTrader) runCycle() error {
 	at.callCount++
 
-	log.Printf("\n" + strings.Repeat("=", 70))
+	log.Println("\n" + strings.Repeat("=", 70))
 	log.Printf("⏰ %s - AI决策周期 #%d", time.Now().Format("2006-01-02 15:04:05"), at.callCount)
-	log.Printf(strings.Repeat("=", 70))
+	log.Println(strings.Repeat("=", 70))
 
 	// 创建决策记录
 	record := &logger.DecisionRecord{
@@ -305,11 +326,11 @@ func (at *AutoTrader) runCycle() error {
 
 		// 打印AI思维链（即使有错误）
 		if decision != nil && decision.CoTTrace != "" {
-			log.Printf("\n" + strings.Repeat("-", 70))
+			log.Println("\n" + strings.Repeat("-", 70))
 			log.Println("💭 AI思维链分析（错误情况）:")
 			log.Println(strings.Repeat("-", 70))
 			log.Println(decision.CoTTrace)
-			log.Printf(strings.Repeat("-", 70) + "\n")
+			log.Println(strings.Repeat("-", 70) + "\n")
 		}
 
 		at.decisionLogger.LogDecision(record)
@@ -317,11 +338,11 @@ func (at *AutoTrader) runCycle() error {
 	}
 
 	// 5. 打印AI思维链
-	log.Printf("\n" + strings.Repeat("-", 70))
+	log.Println("\n" + strings.Repeat("-", 70))
 	log.Println("💭 AI思维链分析:")
 	log.Println(strings.Repeat("-", 70))
 	log.Println(decision.CoTTrace)
-	log.Printf(strings.Repeat("-", 70) + "\n")
+	log.Println(strings.Repeat("-", 70) + "\n")
 
 	// 6. 打印AI决策
 	log.Printf("📋 AI决策列表 (%d 个):\n", len(decision.Decisions))
@@ -577,7 +598,8 @@ func (at *AutoTrader) executeOpenLongWithRecord(decision *decision.Decision, act
 	}
 
 	// 获取当前价格
-	marketData, err := market.Get(decision.Symbol)
+	ctx := context.Background()
+	marketData, err := at.dataProvider.GetMarketData(ctx, decision.Symbol)
 	if err != nil {
 		return err
 	}
@@ -630,7 +652,8 @@ func (at *AutoTrader) executeOpenShortWithRecord(decision *decision.Decision, ac
 	}
 
 	// 获取当前价格
-	marketData, err := market.Get(decision.Symbol)
+	ctx := context.Background()
+	marketData, err := at.dataProvider.GetMarketData(ctx, decision.Symbol)
 	if err != nil {
 		return err
 	}
@@ -673,7 +696,8 @@ func (at *AutoTrader) executeCloseLongWithRecord(decision *decision.Decision, ac
 	log.Printf("  🔄 平多仓: %s", decision.Symbol)
 
 	// 获取当前价格
-	marketData, err := market.Get(decision.Symbol)
+	ctx := context.Background()
+	marketData, err := at.dataProvider.GetMarketData(ctx, decision.Symbol)
 	if err != nil {
 		return err
 	}
@@ -699,7 +723,8 @@ func (at *AutoTrader) executeCloseShortWithRecord(decision *decision.Decision, a
 	log.Printf("  🔄 平空仓: %s", decision.Symbol)
 
 	// 获取当前价格
-	marketData, err := market.Get(decision.Symbol)
+	ctx := context.Background()
+	marketData, err := at.dataProvider.GetMarketData(ctx, decision.Symbol)
 	if err != nil {
 		return err
 	}

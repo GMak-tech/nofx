@@ -727,6 +727,49 @@ The leverage settings control the maximum leverage the AI can use for each trade
 
 ---
 
+#### 📊 Data Provider Configuration
+
+**What are Data Providers?**
+
+Data Providers are pluggable market data sources that fetch price data, technical indicators, and market metrics. NOFX supports multiple providers with automatic selection based on your trader's exchange.
+
+**Available Providers:**
+- **Binance**: Uses Binance Futures API for market data (default for Binance traders)
+- **Hyperliquid**: Uses Hyperliquid native API with optimized caching and boundary alignment (default for Hyperliquid traders)
+- **AUTO**: Automatically selects the appropriate provider based on trader's exchange (recommended)
+
+**Configuration:**
+
+Set the `NOFX_DATA_PROVIDER` environment variable in your `.env` file:
+
+```bash
+# AUTO mode (recommended) - selects provider based on trader's exchange
+NOFX_DATA_PROVIDER=AUTO
+
+# Force Binance data for all traders (rollback option)
+NOFX_DATA_PROVIDER=binance
+
+# Force Hyperliquid data for all traders
+NOFX_DATA_PROVIDER=hyperliquid
+```
+
+**Rollback Instructions:**
+
+If you experience issues with the new data provider system, you can rollback to the legacy Binance-only behavior:
+
+1. Set `NOFX_DATA_PROVIDER=binance` in your `.env` file
+2. Restart the system: `./start.sh restart`
+
+This forces all traders to use Binance market data regardless of their exchange configuration.
+
+**Technical Details:**
+
+- **Hyperliquid Provider**: Implements UTC-aligned candle boundaries (3m/4h), pagination (≤5000 bars/request), and intelligent caching with TTL
+- **Symbol Mapping**: Automatically maps between exchange formats (e.g., BTCUSDT ↔ BTC) using Hyperliquid's meta.universe
+- **Metrics**: Prometheus metrics available for monitoring provider performance (requests, errors, latency, cache hit ratio)
+
+---
+
 #### ⚠️ Important: `use_default_coins` Field
 
 **Smart Default Behavior (v2.0.2+):**

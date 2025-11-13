@@ -82,9 +82,9 @@ func Get(symbol string) (*Data, error) {
 
 	// 计算当前指标 (基于3分钟最新数据)
 	currentPrice := klines3m[len(klines3m)-1].Close
-	currentEMA20 := calculateEMA(klines3m, 20)
-	currentMACD := calculateMACD(klines3m)
-	currentRSI7 := calculateRSI(klines3m, 7)
+	currentEMA20 := CalculateEMA(klines3m, 20)
+	currentMACD := CalculateMACD(klines3m)
+	currentRSI7 := CalculateRSI(klines3m, 7)
 
 	// 计算价格变化百分比
 	// 1小时价格变化 = 20个3分钟K线前的价格
@@ -116,10 +116,10 @@ func Get(symbol string) (*Data, error) {
 	fundingRate, _ := getFundingRate(symbol)
 
 	// 计算日内系列数据
-	intradayData := calculateIntradaySeries(klines3m)
+	intradayData := CalculateIntradaySeries(klines3m)
 
 	// 计算长期数据
-	longerTermData := calculateLongerTermData(klines4h)
+	longerTermData := CalculateLongerTermData(klines4h)
 
 	return &Data{
 		Symbol:            symbol,
