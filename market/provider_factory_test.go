@@ -75,7 +75,7 @@ func TestProviderPrecedence(t *testing.T) {
 	os.Setenv("NOFX_DATA_PROVIDER", "binance")
 	defer os.Unsetenv("NOFX_DATA_PROVIDER")
 
-	provider, err := GetProviderForTrader("binance", "hyperliquid", "")
+	provider, err := GetProviderForTrader("binance", nil, "hyperliquid", "")
 	if err != nil {
 		t.Fatalf("GetProviderForTrader() error = %v", err)
 	}

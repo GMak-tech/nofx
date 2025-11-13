@@ -12,6 +12,8 @@ import (
 	"nofx/pool"
 	"strings"
 	"time"
+
+	"github.com/sonirico/go-hyperliquid"
 )
 
 // AutoTraderConfig 自动交易配置（简化版 - AI全权决策）
