@@ -1,6 +1,7 @@
 package market
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -133,7 +134,7 @@ func (p *HyperliquidProvider) fetchKlinesFromAPI(ctx context.Context, coin, inte
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 	
-	resp, err := http.Post(url, "application/json", nil)
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(reqJSON))
 	if err != nil {
 		return nil, fmt.Errorf("HTTP request failed: %w", err)
 	}
@@ -252,18 +253,11 @@ func (p *HyperliquidProvider) GetFundingRate(ctx context.Context, symbol string)
 		return 0, fmt.Errorf("failed to fetch meta: %w", err)
 	}
 	
-	for _, asset := range meta.Universe {
-		if asset.Name == coin {
-			fundingRate, _ := strconv.ParseFloat(asset.Funding, 64)
-			
-			p.cacheCtx(coin, fundingRate, 0, 0)
-			
-			return fundingRate, nil
-		}
-	}
+	log.Printf("⚠️  Funding rate not available from Hyperliquid meta.Universe, returning 0")
 	
-	p.incrementErrors()
-	return 0, fmt.Errorf("coin %s not found in meta", coin)
+	p.cacheCtx(coin, 0, 0, 0)
+	
+	return 0, nil
 }
 
 func (p *HyperliquidProvider) GetOpenInterest(ctx context.Context, symbol string) (float64, error) {
@@ -288,18 +282,11 @@ func (p *HyperliquidProvider) GetOpenInterest(ctx context.Context, symbol string
 		return 0, fmt.Errorf("failed to fetch meta: %w", err)
 	}
 	
-	for _, asset := range meta.Universe {
-		if asset.Name == coin {
-			oi, _ := strconv.ParseFloat(asset.OpenInterest, 64)
-			
-			p.cacheCtx(coin, 0, oi, 0)
-			
-			return oi, nil
-		}
-	}
+	log.Printf("⚠️  Open interest not available from Hyperliquid meta.Universe, returning 0")
 	
-	p.incrementErrors()
-	return 0, fmt.Errorf("coin %s not found in meta", coin)
+	p.cacheCtx(coin, 0, 0, 0)
+	
+	return 0, nil
 }
 
 func (p *HyperliquidProvider) GetMarkPrice(ctx context.Context, symbol string) (float64, error) {
@@ -324,18 +311,17 @@ func (p *HyperliquidProvider) GetMarkPrice(ctx context.Context, symbol string) (
 		return 0, fmt.Errorf("failed to fetch meta: %w", err)
 	}
 	
-	for _, asset := range meta.Universe {
-		if asset.Name == coin {
-			markPrice, _ := strconv.ParseFloat(asset.MarkPx, 64)
-			
-			p.cacheCtx(coin, 0, 0, markPrice)
-			
-			return markPrice, nil
-		}
+	klines, err := p.GetKlines(ctx, symbol, "3m", 1)
+	if err != nil || len(klines) == 0 {
+		log.Printf("⚠️  Mark price not available, returning 0")
+		p.cacheCtx(coin, 0, 0, 0)
+		return 0, nil
 	}
 	
-	p.incrementErrors()
-	return 0, fmt.Errorf("coin %s not found in meta", coin)
+	markPrice := klines[0].Close
+	p.cacheCtx(coin, 0, 0, markPrice)
+	
+	return markPrice, nil
 }
 
 func (p *HyperliquidProvider) GetMarketData(ctx context.Context, symbol string) (*Data, error) {
