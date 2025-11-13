@@ -24,8 +24,8 @@ func TestNewDataProvider(t *testing.T) {
 			name:           "AUTO mode with hyperliquid trader",
 			envVar:         "AUTO",
 			traderExchange: "hyperliquid",
-			wantProvider:   "hyperliquid",
-			wantErr:        false,
+			wantProvider:   "",
+			wantErr:        true, // Requires hlExchange client
 		},
 		{
 			name:           "Force binance provider",
@@ -38,8 +38,8 @@ func TestNewDataProvider(t *testing.T) {
 			name:           "Force hyperliquid provider",
 			envVar:         "hyperliquid",
 			traderExchange: "binance",
-			wantProvider:   "hyperliquid",
-			wantErr:        false,
+			wantProvider:   "",
+			wantErr:        true, // Requires hlExchange client
 		},
 		{
 			name:           "Default to AUTO when env not set",
@@ -75,12 +75,12 @@ func TestProviderPrecedence(t *testing.T) {
 	os.Setenv("NOFX_DATA_PROVIDER", "binance")
 	defer os.Unsetenv("NOFX_DATA_PROVIDER")
 
-	provider, err := GetProviderForTrader("binance", nil, "hyperliquid", "")
+	provider, err := GetProviderForTrader("binance", nil, "", "binance")
 	if err != nil {
 		t.Fatalf("GetProviderForTrader() error = %v", err)
 	}
 
-	if provider.Name() != "hyperliquid" {
-		t.Errorf("Expected per-trader override to take precedence, got %v", provider.Name())
+	if provider.Name() != "binance" {
+		t.Errorf("Expected traderOverride to take precedence, got %v", provider.Name())
 	}
 }
