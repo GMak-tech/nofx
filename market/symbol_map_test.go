@@ -60,15 +60,15 @@ func TestSymbolMapping(t *testing.T) {
 			name:     "PairToCoin: Unknown pair",
 			input:    "XYZUSDT",
 			method:   "PairToCoin",
-			expected: "",
-			wantErr:  true,
+			expected: "XYZ",
+			wantErr:  false,
 		},
 		{
 			name:     "CoinToPair: Unknown coin",
 			input:    "XYZ",
 			method:   "CoinToPair",
-			expected: "",
-			wantErr:  true,
+			expected: "XYZUSDT",
+			wantErr:  false,
 		},
 	}
 

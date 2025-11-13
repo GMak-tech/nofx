@@ -57,9 +57,9 @@ func TestAlignToBoundaries(t *testing.T) {
 			name:     "Remove partial 3m candle",
 			interval: "3m",
 			klines: []Kline{
-				{OpenTime: 1700000000000, CloseTime: 1700000179999, Open: 100, High: 101, Low: 99, Close: 100.5, Volume: 1000},
-				{OpenTime: 1700000180000, CloseTime: 1700000359999, Open: 100.5, High: 102, Low: 100, Close: 101, Volume: 1500},
-				{OpenTime: 1700000360000, CloseTime: 1700000539999, Open: 101, High: 103, Low: 101, Close: 102, Volume: 2000},
+				{OpenTime: 1699999920000, CloseTime: 1700000099999, Open: 100, High: 101, Low: 99, Close: 100.5, Volume: 1000},
+				{OpenTime: 1700000100000, CloseTime: 1700000279999, Open: 100.5, High: 102, Low: 100, Close: 101, Volume: 1500},
+				{OpenTime: 1700000280000, CloseTime: 1700000459999, Open: 101, High: 103, Low: 101, Close: 102, Volume: 2000},
 			},
 			wantLen: 3, // All candles are complete
 		},
