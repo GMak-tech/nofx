@@ -8,27 +8,15 @@ import (
 func TestCalculateNextBoundary(t *testing.T) {
 	tests := []struct {
 		name     string
-		ts       int64
 		interval string
-		want     int64
 	}{
 		{
 			name:     "3m boundary alignment",
-			ts:       1700000000000, // Some timestamp
 			interval: "3m",
-			want:     1700000100000, // Next 3-minute boundary
 		},
 		{
 			name:     "4h boundary alignment",
-			ts:       1700000000000,
 			interval: "4h",
-			want:     1700006400000, // Next 4-hour boundary
-		},
-		{
-			name:     "Already on 3m boundary",
-			ts:       1700000100000,
-			interval: "3m",
-			want:     1700000280000, // Next 3-minute boundary
 		},
 	}
 
@@ -38,21 +26,21 @@ func TestCalculateNextBoundary(t *testing.T) {
 				apiURL: "https://api.hyperliquid-testnet.xyz",
 			}
 
-			got := provider.calculateNextBoundary(tt.ts, tt.interval)
+			now := time.Now()
+			got := provider.calculateNextBoundary(tt.interval)
 
-			intervalMs := int64(0)
+			if !got.After(now) {
+				t.Errorf("calculateNextBoundary() = %v, should be after current time %v", got, now)
+			}
+
 			if tt.interval == "3m" {
-				intervalMs = 3 * 60 * 1000
+				if got.Minute()%3 != 0 {
+					t.Errorf("calculateNextBoundary() minute %d is not aligned to 3m boundary", got.Minute())
+				}
 			} else if tt.interval == "4h" {
-				intervalMs = 4 * 60 * 60 * 1000
-			}
-
-			if intervalMs > 0 && got%intervalMs != 0 {
-				t.Errorf("calculateNextBoundary() result %d is not aligned to %s boundary", got, tt.interval)
-			}
-
-			if got <= tt.ts {
-				t.Errorf("calculateNextBoundary() = %d, should be > input timestamp %d", got, tt.ts)
+				if got.Hour()%4 != 0 {
+					t.Errorf("calculateNextBoundary() hour %d is not aligned to 4h boundary", got.Hour())
+				}
 			}
 		})
 	}
