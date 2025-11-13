@@ -246,13 +246,6 @@ func (p *HyperliquidProvider) GetFundingRate(ctx context.Context, symbol string)
 	}
 	p.incrementCacheMisses()
 	
-	ctx2 := context.Background()
-	meta, err := p.exchange.Info().Meta(ctx2)
-	if err != nil {
-		p.incrementErrors()
-		return 0, fmt.Errorf("failed to fetch meta: %w", err)
-	}
-	
 	log.Printf("⚠️  Funding rate not available from Hyperliquid meta.Universe, returning 0")
 	
 	p.cacheCtx(coin, 0, 0, 0)
@@ -275,13 +268,6 @@ func (p *HyperliquidProvider) GetOpenInterest(ctx context.Context, symbol string
 	}
 	p.incrementCacheMisses()
 	
-	ctx2 := context.Background()
-	meta, err := p.exchange.Info().Meta(ctx2)
-	if err != nil {
-		p.incrementErrors()
-		return 0, fmt.Errorf("failed to fetch meta: %w", err)
-	}
-	
 	log.Printf("⚠️  Open interest not available from Hyperliquid meta.Universe, returning 0")
 	
 	p.cacheCtx(coin, 0, 0, 0)
@@ -303,13 +289,6 @@ func (p *HyperliquidProvider) GetMarkPrice(ctx context.Context, symbol string) (
 		return cached.markPrice, nil
 	}
 	p.incrementCacheMisses()
-	
-	ctx2 := context.Background()
-	meta, err := p.exchange.Info().Meta(ctx2)
-	if err != nil {
-		p.incrementErrors()
-		return 0, fmt.Errorf("failed to fetch meta: %w", err)
-	}
 	
 	klines, err := p.GetKlines(ctx, symbol, "3m", 1)
 	if err != nil || len(klines) == 0 {
