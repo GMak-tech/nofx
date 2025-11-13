@@ -17,35 +17,35 @@ func TestNewDataProvider(t *testing.T) {
 			name:           "AUTO mode with binance trader",
 			envVar:         "AUTO",
 			traderExchange: "binance",
-			wantProvider:   "BinanceProvider",
+			wantProvider:   "binance",
 			wantErr:        false,
 		},
 		{
 			name:           "AUTO mode with hyperliquid trader",
 			envVar:         "AUTO",
 			traderExchange: "hyperliquid",
-			wantProvider:   "HyperliquidProvider",
+			wantProvider:   "hyperliquid",
 			wantErr:        false,
 		},
 		{
 			name:           "Force binance provider",
 			envVar:         "binance",
 			traderExchange: "hyperliquid",
-			wantProvider:   "BinanceProvider",
+			wantProvider:   "binance",
 			wantErr:        false,
 		},
 		{
 			name:           "Force hyperliquid provider",
 			envVar:         "hyperliquid",
 			traderExchange: "binance",
-			wantProvider:   "HyperliquidProvider",
+			wantProvider:   "hyperliquid",
 			wantErr:        false,
 		},
 		{
 			name:           "Default to AUTO when env not set",
 			envVar:         "",
 			traderExchange: "binance",
-			wantProvider:   "BinanceProvider",
+			wantProvider:   "binance",
 			wantErr:        false,
 		},
 	}
@@ -80,7 +80,7 @@ func TestProviderPrecedence(t *testing.T) {
 		t.Fatalf("GetProviderForTrader() error = %v", err)
 	}
 
-	if provider.Name() != "HyperliquidProvider" {
+	if provider.Name() != "hyperliquid" {
 		t.Errorf("Expected per-trader override to take precedence, got %v", provider.Name())
 	}
 }
