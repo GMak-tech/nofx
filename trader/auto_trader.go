@@ -164,7 +164,7 @@ func NewAutoTrader(config AutoTraderConfig) (*AutoTrader, error) {
 	logDir := fmt.Sprintf("decision_logs/%s", config.ID)
 	decisionLogger := logger.NewDecisionLogger(logDir)
 
-	var hlExchange interface{}
+	var hlExchange *hyperliquid.Exchange
 	var hlAPIURL string
 	if ht, ok := trader.(*HyperliquidTrader); ok {
 		hlExchange = ht.exchange

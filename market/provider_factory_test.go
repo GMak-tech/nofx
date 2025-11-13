@@ -57,7 +57,7 @@ func TestNewDataProvider(t *testing.T) {
 				defer os.Unsetenv("NOFX_DATA_PROVIDER")
 			}
 
-			provider, err := GetProviderForTrader(tt.traderExchange, "", "")
+			provider, err := GetProviderForTrader(tt.traderExchange, nil, "", "")
 			
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetProviderForTrader() error = %v, wantErr %v", err, tt.wantErr)
