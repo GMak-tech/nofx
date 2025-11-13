@@ -197,16 +197,16 @@ func TestPaginationLimit(t *testing.T) {
 
 func TestCacheTTL(t *testing.T) {
 	provider := &HyperliquidProvider{
-		apiURL:     "https://api.hyperliquid-testnet.xyz",
-		candleCache: make(map[string]*CandleCache),
+		apiURL:      "https://api.hyperliquid-testnet.xyz",
+		candleCache: make(map[string]*cachedCandles),
 	}
 
 	cacheKey := "BTC_3m"
 	now := time.Now()
 	expiredTime := now.Add(-10 * time.Minute) // 10 minutes ago
 
-	provider.candleCache[cacheKey] = &CandleCache{
-		data:      []Kline{},
+	provider.candleCache[cacheKey] = &cachedCandles{
+		klines:    []Kline{},
 		expiresAt: expiredTime,
 	}
 
